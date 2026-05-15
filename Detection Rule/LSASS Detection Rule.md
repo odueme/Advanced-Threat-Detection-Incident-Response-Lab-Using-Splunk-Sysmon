@@ -111,4 +111,4 @@ NOT SourceImage IN (
 
 ## 9. Key Insight
 
-> This detection is behavioral — it detects LSASS access, not specific tools.
+> This detection is behavioral it detects LSASS access, not specific tools.
