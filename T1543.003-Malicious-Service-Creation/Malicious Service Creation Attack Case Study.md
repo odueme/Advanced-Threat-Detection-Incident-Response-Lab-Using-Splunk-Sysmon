@@ -4,7 +4,7 @@
 **Case Study ID:** CS-2026-003  
 **Technique:** T1543.003 — Windows Service Persistence  
 **Tools Used:** Sysmon, Splunk, Windows Event Logs, sc.exe  
-**Analyst:** Olayinka Oyetade  
+**Analyst:** Odueme Uzoezi Francis  
 **Date:** May 13, 2026  
 
 ---
