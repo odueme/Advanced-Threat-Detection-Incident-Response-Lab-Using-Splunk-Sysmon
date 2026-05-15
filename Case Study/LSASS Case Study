@@ -1,0 +1,138 @@
+# Portfolio Case Study  
+## Detecting LSASS Credential Dumping in a Windows SOC Environment  
+
+**Case Study ID:** CS-2026-002  
+**Technique:** T1003.001 — OS Credential Dumping (LSASS)  
+**Tools Used:** Sysmon, Splunk, Windows Event Logs, PowerShell  
+**Analyst:** Olayinka Oyetade  
+**Date:** May 13, 2026  
+
+---
+
+## 1. Scenario
+
+An attacker gains access to a Windows endpoint and targets **LSASS** to extract credentials.
+
+### Objective
+Detect credential dumping **before credentials are used for lateral movement**.
+
+---
+
+## 2. Attack Overview
+
+| Step | Action |
+|-----|-------|
+| 1 | Open Task Manager |
+| 2 | Locate `lsass.exe` |
+| 3 | Create dump file |
+| 4 | Dump saved to Temp directory |
+
+### Output File
+```
+C:\Users\[User]\AppData\Local\Temp\lsass.DMP
+```
+
+---
+
+## 3. Detection
+
+### Key Event
+
+| Field | Value |
+|------|------|
+| Event ID | 10 |
+| Event Type | ProcessAccess |
+| Source Process | taskmgr.exe |
+| Target Process | lsass.exe |
+| GrantedAccess | 0x1fffff |
+
+---
+
+### Detection Query
+
+```spl
+index=endpoint EventCode=10
+TargetImage="C:\\Windows\\System32\\lsass.exe"
+NOT SourceImage IN (
+ "C:\\Windows\\System32\\svchost.exe",
+ "C:\\Windows\\System32\\wininit.exe",
+ "C:\\Windows\\System32\\csrss.exe",
+ "C:\\Windows\\System32\\lsass.exe",
+ "C:\\Windows\\System32\\services.exe",
+ "C:\\Windows\\System32\\MsMpEng.exe"
+)
+| table _time, host, SourceImage, TargetImage, GrantedAccess
+| sort -_time
+```
+
+---
+
+## 4. Why This Detection Works
+
+- Detects **behavior**, not tools  
+- Works against:
+  - Mimikatz  
+  - Task Manager  
+  - ProcDump  
+  - Custom tools  
+
+> Any process requesting high access to LSASS triggers detection  
+
+---
+
+## 5. Results
+
+| Capability | Result |
+|-----------|--------|
+| LSASS access visibility | Confirmed |
+| Built-in tool detection | Confirmed |
+| Tool-agnostic detection | Confirmed |
+| Alert pipeline | Working |
+| Detection time | < 3 minutes |
+| False positives | Low |
+
+---
+
+## 6. SOC Impact
+
+- High-confidence detection  
+- Minimal noise due to whitelisting  
+- Fast triage capability  
+- Critical credential theft prevention  
+
+---
+
+## 7. Key Insight
+
+> Credential dumping detection must focus on **access behavior**, not tool names.
+
+---
+
+## 8. Skills Demonstrated
+
+- Sysmon deployment and tuning  
+- SPL query writing  
+- Detection engineering  
+- MITRE ATT&CK mapping  
+- Incident documentation  
+
+---
+
+## 9. Improvements (Production)
+
+| Improvement | Benefit |
+|------------|--------|
+| Correlate Event ID 10 + 11 | Confirm dump file creation |
+| Parent process analysis | Better triage context |
+| Risk scoring | Faster prioritization |
+
+---
+
+## 10. Final Takeaway
+
+LSASS credential dumping is one of the **highest-value detections in SOC operations**.  
+
+Detecting early prevents:
+- Credential theft  
+- Lateral movement  
+- Domain compromise  
